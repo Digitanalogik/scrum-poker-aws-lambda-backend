@@ -5,7 +5,10 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 
 // Account specific configuration, change these if needed
-const client = new DynamoDBClient({ region: "eu-north-1" });
+const AWS_REGION = "eu-north-1";
+const DYNAMODB_TABLE = "ScrumPokerVote";
+
+const client = new DynamoDBClient({ region: AWS_REGION });
 const docClient = DynamoDBDocumentClient.from(client);
 
 export const handler = async (event) => {
@@ -66,7 +69,7 @@ export const handler = async (event) => {
 
     // Using PutItem
     const command = new PutCommand({
-      TableName: "ScrumPoker",
+      TableName: DYNAMODB_TABLE,
       Item: dataToStore,
     });
   

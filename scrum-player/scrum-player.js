@@ -13,7 +13,7 @@ const docClient = DynamoDBDocumentClient.from(client);
 
 export const handler = async (event) => {
 
-  console.log("LAMBDA KUTSUTTU! event = ", JSON.stringify(event));
+  console.log("SCRUM POKER LAMBDA - EVENT:\n", event);
 
   try {
     const body = JSON.parse(event.body);

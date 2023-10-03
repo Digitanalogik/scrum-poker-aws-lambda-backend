@@ -47,9 +47,9 @@ export const handler = async (event) => {
     // Define the document for DynamoDB
     const dataToStore = {
       id: timestamp,
-      playerName: playerName,
-      roomName: roomName,
-      roomSecret: roomSecret,
+      playerName,
+      roomName,
+      roomSecret,
       lastLogin: timestamp
     };
 

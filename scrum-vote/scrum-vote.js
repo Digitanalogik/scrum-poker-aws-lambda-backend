@@ -18,6 +18,7 @@ export const handler = async (event) => {
   try {
     const body = JSON.parse(event.body);
 
+    const playerId = body.playerId;
     const playerName = body.playerName;
     const roomName = body.roomName;
     const roomSecret = body.roomSecret; // This is optional, thus not checked to exist
@@ -26,6 +27,10 @@ export const handler = async (event) => {
 
     // Check required fields
     let errors = [];
+
+    if (!playerId) {
+      errors.push('playerId');
+    }
 
     if (!playerName) {
       errors.push('playerName');
@@ -57,15 +62,16 @@ export const handler = async (event) => {
     // Define the document for DynamoDB
     const dataToStore = {
       id: timestamp,
+      playerId,
       playerName,
       roomName,
       roomSecret,
       cardValue,
       cardTitle,
-      timestamp: new Date().getTime().toString()
+      timestamp: timestamp
     };
 
-    console.log("SCRUM SCRUM POKER DATA - VOTE:\n", dataToStore)
+    console.log("SCRUM SCRUM POKER DATA - VOTE:\n", dataToStore);
 
     // Using PutItem
     const command = new PutCommand({

@@ -2,7 +2,6 @@
 // AWS Lambda function to remove a player from DynamoDB when connectionId is disconnected
 
 import { DynamoDBClient, ScanCommand, DeleteItemCommand } from '@aws-sdk/client-dynamodb';
-import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 
 // Account specific configuration, change these if needed
 const AWS_REGION = "eu-north-1";

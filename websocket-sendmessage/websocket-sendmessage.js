@@ -1,6 +1,5 @@
 // Scrum Poker API: WebSocket Send Message - Tatu Soininen, 2023
 // AWS Lambda function to send a message to all players in the same room
-
 import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
 
@@ -23,7 +22,6 @@ const findPlayerByConnectionId = async (connectionId) => {
 
   const command = new ScanCommand(params);
   const response = await client.send(command);
-  console.log("RESPONSE: ", response);
 
   if (response.Items && response.Items.length > 0) {
     console.log("DynamoDB scan found: ", response.Items[0]);
@@ -50,13 +48,14 @@ const findPlayersByRoom = async (roomName, roomSecret) => {
   const response = await client.send(command);
 
   if (response.Items && response.Items.length > 0) {
-    console.log("DynamoDB scan found: ", response.Items);
+    console.log("DynamoDB scan found these players in the same room: ", response.Items);
     return response.Items;
   } else {
     console.log("No players found in DynamoDB.");
     return null;
   }
 };
+
 
 export const handler = async (event) => {
 
@@ -70,7 +69,6 @@ export const handler = async (event) => {
 
     const roomName = player.roomName.S;
     const roomSecret = player.roomSecret.S;
-
     console.log("Room: ", roomName, " - ", roomSecret);
 
     const players = await findPlayersByRoom(roomName, roomSecret);
@@ -80,53 +78,54 @@ export const handler = async (event) => {
     const domain = event.requestContext.domainName;
     const stage = event.requestContext.stage;
     const API_ENDPOINT = `https://${domain}/${stage}`;
-
+    console.log("DEBUG USED API URL (constructed vs environment variable)");
     console.log("API_ENDPOINT: ", API_ENDPOINT);
+    console.log("CONNECTIONS_API: ", process.env.CONNECTIONS_API);
 
     // Create an instance of the ApiGatewayManagementApiClient to send messages to connections
     const callbackAPI = new ApiGatewayManagementApiClient({
       apiVersion: '2018-11-29',
-      endpoint: API_ENDPOINT
+      endpoint: process.env.CONNECTIONS_API
     });
 
-    try {
+    // Get the message from the request body
+    const message = JSON.parse(event.body).message;
 
-      // Get the message from the request body
-      const message = JSON.parse(event.body).message;
+    console.log("Sending message: ", message);
 
-      console.log("Sending message: ", message);
-
-      // Send the message to all connections except the sender
-      const sendMessages = players.Items.map(async ({ connectionId }) => {
-        if (connectionId !== event.requestContext.connectionId) {
-          try {
-            // Create a new PostToConnectionCommand with the connectionId and message
-            const command = new PostToConnectionCommand({
-              ConnectionId: connectionId,
-              Data: message
-            });
-
-            // Send the message to the connection using the ApiGatewayManagementApiClient
-            await callbackAPI.send(command);
-          } catch (e) {
-            console.log(e);
-          }
+    // Send the message to all connections except the sender
+    const sendMessages = players.map(async ({ connectionId }) => {
+      if (connectionId !== event.requestContext.connectionId) {
+        try {
+          // Create a new PostToConnectionCommand with the connectionId and message
+          const command = new PostToConnectionCommand({
+            ConnectionId: connectionId.S,
+            Data: message
+          });
+  
+          console.log("Posting to connection: ", CONNECTIONS_API, connectionId.S, message);
+  
+          // Send the message to the connection using the ApiGatewayManagementApiClient
+          await callbackAPI.send(command);
+        } catch (e) {
+          console.log("ERROR DESCRIPTION: ", e);
         }
-      });
-
-    // Wait for all messages to be sent before returning a response
-    await Promise.all(sendMessages);
-
-  } catch (err) {
-    // Return 500 error if there was an error scanning DynamoDB
-    return {
-      statusCode: 500,
-    };
+      }
+    });
+  
+    try {
+      // Wait for all messages to be sent before returning a response
+      await Promise.all(sendMessages);
+    } catch (e) {
+      console.log(e);
+      // Return 500 error if there was an error sending messages
+      return {
+        statusCode: 500,
+      };
+    }
   }
-
   // Return 200 status code if all messages were sent successfully
   return {
     statusCode: 200,
   };
-  }
 };

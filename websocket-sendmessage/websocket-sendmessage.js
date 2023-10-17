@@ -19,7 +19,7 @@ const findPlayerByConnectionId = async (connectionId) => {
   };
 
   console.log("Scanning DynamoDB for connectionId: ", connectionId);
-
+  
   const command = new ScanCommand(params);
   const response = await client.send(command);
 
@@ -56,7 +56,6 @@ const findPlayersByRoom = async (roomName, roomSecret) => {
   }
 };
 
-
 export const handler = async (event) => {
 
   console.log("LAMBDA - WEBSOCKET SEND MESSAGE - EVENT: ", event);
@@ -78,14 +77,11 @@ export const handler = async (event) => {
     const domain = event.requestContext.domainName;
     const stage = event.requestContext.stage;
     const API_ENDPOINT = `https://${domain}/${stage}`;
-    console.log("DEBUG USED API URL (constructed vs environment variable)");
-    console.log("API_ENDPOINT: ", API_ENDPOINT);
-    console.log("CONNECTIONS_API: ", process.env.CONNECTIONS_API);
 
     // Create an instance of the ApiGatewayManagementApiClient to send messages to connections
     const callbackAPI = new ApiGatewayManagementApiClient({
       apiVersion: '2018-11-29',
-      endpoint: process.env.CONNECTIONS_API
+      endpoint: API_ENDPOINT
     });
 
     // Get the message from the request body
@@ -102,9 +98,9 @@ export const handler = async (event) => {
             ConnectionId: connectionId.S,
             Data: message
           });
-  
-          console.log("Posting to connection: ", CONNECTIONS_API, connectionId.S, message);
-  
+
+          console.log("Posting to connection: ", API_ENDPOINT, connectionId.S, message);
+
           // Send the message to the connection using the ApiGatewayManagementApiClient
           await callbackAPI.send(command);
         } catch (e) {

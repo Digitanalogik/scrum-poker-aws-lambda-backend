@@ -66,6 +66,8 @@ export const handler = async (event) => {
   if (player) {
     console.log("Player found: ", player);
 
+    const id = player.id.S;
+    const name = player.playerName.S;
     const roomName = player.roomName.S;
     const roomSecret = player.roomSecret.S;
     console.log("Room: ", roomName, " - ", roomSecret);
@@ -87,7 +89,9 @@ export const handler = async (event) => {
     // Get the message from the request body
     const message = JSON.parse(event.body).message;
 
-    console.log("Sending message: ", message);
+    // Generate the formatted message
+    const json = `{"action":"player-message","name":"${name}","id":"${id}","message":"${message}"}`;
+    console.log("Send JSON message to others: ", json);
 
     // Send the message to all connections except the sender
     const sendMessages = players.map(async ({ connectionId }) => {
@@ -96,10 +100,10 @@ export const handler = async (event) => {
           // Create a new PostToConnectionCommand with the connectionId and message
           const command = new PostToConnectionCommand({
             ConnectionId: connectionId.S,
-            Data: message
+            Data: json
           });
 
-          console.log("Posting to connection: ", API_ENDPOINT, connectionId.S, message);
+          console.log("Posting to connection: ", API_ENDPOINT, connectionId.S, json);
 
           // Send the message to the connection using the ApiGatewayManagementApiClient
           await callbackAPI.send(command);

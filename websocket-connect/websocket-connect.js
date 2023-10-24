@@ -33,7 +33,6 @@ const findPlayer = async (id, name) => {
   }
 };
 
-
 const updatePlayerConnection = async (id, name, connectionId) => {
   try {
     const params = {

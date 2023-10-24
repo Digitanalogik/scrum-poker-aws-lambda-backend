@@ -120,7 +120,7 @@ export const handler = async (event) => {
       });
 
       // Generate the login message
-      const message = `New player has joined the game: ${name} (${id})`;
+      const message = `{"action":"player-join","name":"${name}","id":"${id}"}`;
       console.log("Send login message to others: ", message);
 
       // Send the message to all connections except the sender

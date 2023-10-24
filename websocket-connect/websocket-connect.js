@@ -83,7 +83,6 @@ const findPlayersByRoom = async (roomName, roomSecret) => {
   }
 };
 
-
 export const handler = async (event) => {
 
   console.log("LAMBDA - WEBSOCKET CONNECT - EVENT: ", event);

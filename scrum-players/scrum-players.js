@@ -47,8 +47,13 @@ export const handler = async (event) => {
   const players = await findPlayersByRoom(room, secret);
   console.log("DynamoDB scan found these players in the same room: ", players.map(p => p.playerName.S));
 
+  const dtoPlayers = players.map(p => { return { id: p.id.S, name: p.playerName.S }});
+
+  // Sort players by id descending (timestamp)
+  dtoPlayers.sort((a, b) => b.id.localeCompare(a.id));
+
   return {
     statusCode: 200,
-    body: JSON.stringify(players.Items),
+    body: JSON.stringify(dtoPlayers),
   };
 };
